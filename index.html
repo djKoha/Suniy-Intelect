@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Bojxona yordamchi</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <!-- Bootstrap Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+  />
+
+  <style>
+    :root {
+      --ai-primary: #22c55e;
+      --ai-secondary: #0ea5e9;
+      --ai-bg-dark: #020617;
+      --ai-card-bg: rgba(15, 23, 42, 0.85);
+      --ai-border: rgba(148, 163, 184, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #0f172a, #020617);
+      color: #e5e7eb;
+      overflow-x: hidden;
+    }
+
+    /* 🔮 AI фон — анимацияланган градиент */
+    .ai-bg-animated {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background: linear-gradient(
+        120deg,
+        #020617,
+        #020617,
+        #0f172a,
+        #1e293b,
+        #0369a1,
+        #22c55e
+      );
+      background-size: 400% 400%;
+      animation: gradientMove 18s ease infinite;
+    }
+
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* 🔵 AI “blob” нурлари */
+    .ai-orb {
+      position: fixed;
+      border-radius: 999px;
+      filter: blur(40px);
+      opacity: 0.45;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .ai-orb.orb-1 {
+      width: 320px;
+      height: 320px;
+      background: #22c55e;
+      top: -60px;
+      left: -40px;
+      animation: floatOrb1 22s ease-in-out infinite alternate;
+    }
+
+    .ai-orb.orb-2 {
+      width: 280px;
+      height: 280px;
+      background: #0ea5e9;
+      bottom: -80px;
+      right: -40px;
+      animation: floatOrb2 24s ease-in-out infinite alternate;
+    }
+
+    .ai-orb.orb-3 {
+      width: 220px;
+      height: 220px;
+      background: #a855f7;
+      top: 40%;
+      left: 60%;
+      animation: floatOrb3 26s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatOrb1 {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(80px, 60px); }
+    }
+    @keyframes floatOrb2 {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-60px, -40px); }
+    }
+    @keyframes floatOrb3 {
+      0% { transform: translate(-40px, 20px); }
+      100% { transform: translate(30px, -30px); }
+    }
+
+    /* 📦 Чат контейнер */
+    .chat-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .chat-card {
+      width: 100%;
+      max-width: 540px;
+      background: radial-gradient(circle at top left, #0b1120, #020617);
+      border-radius: 1.75rem;
+      border: 1px solid var(--ai-border);
+      box-shadow:
+        0 30px 80px rgba(15, 23, 42, 0.95),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+      padding: 1.4rem 1.2rem 1.3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chat-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right,
+        rgba(34, 197, 94, 0.12),
+        transparent 55%);
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    .chat-card-inner {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Header */
+    .ai-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.2rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      background: linear-gradient(
+        120deg,
+        rgba(15, 23, 42, 0.85),
+        rgba(15, 23, 42, 0.95)
+      );
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #e5e7eb;
+      margin-bottom: 0.6rem;
+    }
+
+    .ai-pill i {
+      font-size: 0.95rem;
+      color: #22c55e;
+    }
+
+    .chat-title {
+      font-size: clamp(1.4rem, 3vw, 1.7rem);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: linear-gradient(to right, #bbf7d0, #facc15, #38bdf8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 0.3rem;
+    }
+
+    .chat-subtitle {
+      font-size: 0.9rem;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .chat-subtitle i {
+      color: #22c55e;
+    }
+
+    /* 🔍 AI qidiruv – структураси сақланди, стили янгиланган */
+    .smart-search {
+      margin-top: 0.35rem;
+    }
+
+    .smart-search .form-control {
+      border-radius: 999px 0 0 999px;
+      border-right: none;
+      font-size: 0.9rem;
+      background: rgba(15, 23, 42, 0.8);
+      border-color: rgba(148, 163, 184, 0.7);
+      color: #e5e7eb;
+    }
+
+    .smart-search .form-control::placeholder {
+      color: #6b7280;
+    }
+
+    .smart-search .form-control:focus {
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.7);
+      border-color: rgba(34, 197, 94, 0.9);
+    }
+
+    .smart-search .btn {
+      border-radius: 0;
+      border-color: rgba(148, 163, 184, 0.7);
+    }
+
+    .smart-search .btn:last-child {
+      border-radius: 0 999px 999px 0;
+    }
+
+    .mic-btn {
+      background: radial-gradient(circle at top, #0f172a, #020617);
+      border-color: rgba(148, 163, 184, 0.7);
+      color: #e5e7eb;
+    }
+
+    .mic-btn.active {
+      background: #22c55e !important;
+      border-color: #22c55e !important;
+      color: #022c22 !important;
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.9);
+    }
+
+    #askBtn {
+      background: linear-gradient(120deg, #22c55e, #0ea5e9);
+      color: #020617;
+      border: none;
+      font-weight: 600;
+      padding-inline: 0.9rem;
+    }
+
+    #askBtn:hover {
+      filter: brightness(1.08);
+    }
+
+    /* Javob oynasi */
+    .ai-answer-box {
+      margin-top: 0.8rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 0.9rem;
+      background: radial-gradient(circle at top left,
+        rgba(15, 23, 42, 0.95),
+        rgba(15, 23, 42, 0.98));
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      font-size: 0.9rem;
+      color: #e5e7eb;
+      min-height: 52px;
+      white-space: pre-wrap;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ai-answer-box::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        120deg,
+        rgba(34, 197, 94, 0.15),
+        transparent 40%,
+        rgba(56, 189, 248, 0.15)
+      );
+      mix-blend-mode: soft-light;
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .ai-answer-box .muted {
+      opacity: 0.8;
+      font-style: italic;
+      color: #9ca3af;
+    }
+
+    .ai-answer-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #6b7280;
+      margin-top: 0.5rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .ai-answer-label i {
+      font-size: 0.85rem;
+      color: #22c55e;
+    }
+
+    @media (max-width: 575.98px) {
+      .chat-card {
+        padding: 1.2rem 1rem 1.1rem;
+        border-radius: 1.4rem;
+      }
+      .chat-title {
+        font-size: 1.3rem;
+      }
+      .chat-subtitle {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 🔮 AI анимацияли фон -->
+  <div class="ai-bg-animated"></div>
+  <div class="ai-orb orb-1"></div>
+  <div class="ai-orb orb-2"></div>
+  <div class="ai-orb orb-3"></div>
+
+  <!-- 📦 Фақат чатбот блоки -->
+  <div class="chat-wrapper">
+    <div class="chat-card">
+      <div class="chat-card-inner">
+        <div class="ai-pill">
+          <i class="bi bi-cpu-fill"></i>
+          AI Bojxona yordamchi
+        </div>
+
+        <div class="chat-title">Sizning bojxona AI hamkoringiz</div>
+        <div class="chat-subtitle">
+          <i class="bi bi-shield-check"></i>
+          Savol yozing ёки микрофон орқали гапиринг — AI жавобни содда ва тушунарли қилиб беради.
+        </div>
+
+        <!-- 🔍 AI QIDIRUV BLOKI -->
+        <div class="smart-search">
+          <div class="input-group input-group-sm">
+            <input
+              id="aiQuestion"
+              type="text"
+              class="form-control"
+              placeholder="Savol yozing: “Aeroportdan qancha tovarni bojsiz olib kirishim mumkin?”"
+              aria-label="AI qidiruv"
+            />
+            <button class="btn mic-btn" type="button" id="micBtn" title="Mikrofondan foydalanish">
+              <i class="bi bi-mic-fill"></i>
+            </button>
+            <button class="btn" type="button" id="askBtn">
+              <i class="bi bi-send-fill me-1"></i> Yuborish
+            </button>
+          </div>
+
+          <div class="ai-answer-label">
+            <i class="bi bi-robot"></i>
+            AI javobi
+          </div>
+
+          <div id="aiAnswer" class="ai-answer-box mt-1">
+            <span class="muted">
+              AI yordamchi: bojxona bo‘yicha savolingizni yozing yoki mikrofonga gapiring.
+            </span>
+          </div>
+        </div>
+        <!-- /AI QIDIRUV BLOKI -->
+      </div>
+    </div>
+  </div>
+  <button
+    type="button"
+    onclick="history.back()"
+    class="btn position-fixed bottom-0 start-0 m-3 d-flex align-items-center fw-semibold"
+    style="background: linear-gradient(90deg,#0d6efd,#facc15); border:none; border-radius:999px; box-shadow:0 10px 25px rgba(15,23,42,0.7); color:#0f172a;"
+  >
+    <i class="bi bi-arrow-left me-2"></i>
+    Orqaga
+  </button>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 🔑 OpenAI API kaliti – bu yerga O'Z KALITINGIZNI qo'ying
+    // Eslatma: haqiqiy loyihada kalitni frontendda emas, backendda saqlash kerak.
+   
+
+    // 🧠 Bojxona qoidalari matni – sen yuborgan broshyura kontenti (ixchamlashtirilgan, lekin ma'nosi saqlangan)
+    const BOJXONA_QOIDALARI = `
+Jismoniy shaxslar tomonidan shaxsiy ehtiyojlari uchun tovarlarni notijorat maqsadlarda olib kirishda qo‘llaniladigan pul hamda muddat cheklovlari.
+
+Bojsiz qiymat limitlari:
+- Xalqaro aeroportlardan — 1000 USD (xorijda 3 kun bo‘lganda)
+- Temir yo‘l о‘tkazish punktlarida — 500 USD (2 kun)
+- Daryo о‘tkazish punktlarida — 500 USD (2 kun)
+- Avtoyo‘l (piyoda) о‘tkazish punktlarida — 300 USD (2 kun)
+- Xalqaro kuryerlik jo‘natmalarida — 200 USD (1 oy ichida)
+- Xalqaro pochta jo‘natmalarida jismoniy shaxs nomiga keladigan tovarlar — 100 USD.
+
+
+20.07.2025-yildan boshlab qo‘shimcha qoidalar:
+- Temir yo‘l, daryo, avtoyo‘l orqali xorijda 2 kundan kam bo‘lish;
+- Havo transportida xorijda 3 kundan kam bo‘lish;
+- 1 oy ichida xorijga 3 martadan ortiq chiqish holatlarida
+  bojsiz normalar qo‘llanilmaydi va tovarning to‘liq qiymatidan yagona bojxona to‘lovi undiriladi.
+
+Bojxona to‘lovlariga tortilmaydigan tovarlar (miqdoriy normalar):
+
+Asosiy guruhlar:
+- Maishiy texnika tovarlari
+- Elektrotexnika tovarlari
+- Oshxona buyumlari
+
+Miqdoriy norma:
+- Ushbu toifalardagi tovarlarni 6 kalendar oy ichida 1 donadan bojsiz olib kirish mumkin.
+
+Boshqa tovarlar:
+- Har bir nomdagi boshqa tovar — 2 kg gacha, 1 kalendar oy davomida;
+- Jami og‘irligi 10 kg dan oshmasligi kerak.
+
+Ayrim oziq-ovqat mahsulotlari uchun maksimal og‘irlik (xalqaro aeroportlar bundan mustasno):
+- Guruch — 3 kg gacha
+- Non-bulka mahsulotlari — 5 kg gacha
+- Goʻsht va goʻsht mahsulotlari — 2 kg gacha
+- Shakar — 2 kg gacha
+- Oʻsimlik moylari — 2 kg gacha
+- Yangi meva-sabzavot, uzum, poliz ekinlari, dukkakli o‘simliklar, quritilgan sabzavot va mevalar — 40 kg gacha.
+
+Shaxsiy ehtiyoj toifasiga kirmaydigan tovarlar misollari:
+- Ichki yonuv dvigatellari
+- Namoyish (ekspozitsiya) apparaturasi va modellar
+- Markaziy isitish qozonlari
+- TIF TN 8426–8430, 9030, 9031 uskunalar
+- Tibbiyot texnikasi va uskunalari, tibbiyot/xirurgiya/stomatologiya mebellari
+- Sartaroshxona kreslolari, solyariylar
+- Fotolaboratoriya apparaturasi
+- Tangalar, banknotlar bilan ishlaydigan o‘yin avtomatlari.
+
+Yagona bojxona toʻlovi:
+- Bojsiz meʼyordan oshib ketgan qismiga nisbatan qoʻllaniladi.
+- Stavka: tovarning bojxona qiymatidan 30%, lekin har bir kg uchun kamida 3 USD.
+- Tijorat maqsadidagi tovarlar uchun umumiy tartibdagi toʻlovlar qoʻllaniladi.
+
+Naqd valyutani olib kirish va olib chiqish:
+- 100 000 000 soʻm ekvivalentigacha naqd milliy yoki chet el valyutasi:
+  • cheklovlarsiz olib kirish va olib chiqish mumkin;
+  • yozma deklaratsiya talab qilinmaydi.
+- 100 000 000 soʻmdan ortiq summalar:
+  • yoʻlovchi bojxona deklaratsiyasi orqali majburiy deklaratsiya qilinadi.
+
+Meʼyoridan ortiq valyutani olib chiqish:
+- Rezidentlar: Hukumat delegatsiyasi aʼzolari – VM farmoyishi asosida.
+- Norezidentlar: kirishda rasmiylashtirilgan deklaratsiyadagi miqdor doirasida yoki qonuniyligini tasdiqlovchi hujjatlar asosida.
+
+“Qizil” va “Yashil” yoʻlaklar:
+- “Qizil” yoʻlak – yozma deklaratsiya talab qilinadigan tovarlar uchun.
+- “Yashil” yoʻlak – yozma deklaratsiya qilinadigan tovarlari yo‘qligi haqida og‘zaki bildirish.
+
+Asosiy qoidalar:
+- “Qizil” yoʻlakdan o‘tuvchilar yoʻlovchi bojxona deklaratsiyasini to‘ldiradi.
+- “Yashil” yoʻlakdan o‘tish – deklaratsiyalanadigan tovarlar yo‘qligi haqidagi xabar sifatida qabul qilinadi.
+- Bojxona organlari “qizil” yo‘lakda tanlab olish (selectivity) prinsipidan foydalanadi.
+- “Yashil” yoʻlakdan o‘tayotgan shaxsda meʼyordan ortiq tovar borligiga gumon bo‘lsa, qo‘shimcha nazorat choralariga haqli.
+
+Masofaviy bojxona nazorati:
+- Xalqaro aeroportlarda yoʻlovchilar xavfni boshqarish tizimi va masofaviy vizual kuzatuv orqali tanlab olinadi va nazoratdan o‘tkaziladi.
+
+Ogʻzaki deklaratsiya:
+- Olib chiqilishi taqiqlanmagan yoki cheklanmagan tovarlarda;
+- Qiymat va miqdor deklaratsiyasiz olib chiqish normalaridan oshmaganda;
+- Yozma deklaratsiya talab etilmaydigan naqd valyuta normadan oshmaganda.
+
+Taqiqlangan va cheklangan tovarlar:
+
+Olib kirilishi taqiqlangan tovarlar:
+- Davlat va jamiyat tuzumini qoʻporishga qaratilgan, urush, terrorizm, zoʻravonlik, ekstremizm, irqchilikni targʻib qiluvchi materiallar;
+- Pornografik materiallar;
+- Etil spirti;
+- Uchuvchisiz uchish qurilmalari;
+- Aksiz markasisiz tamaki va alkogolli ichimliklar;
+- Pirotexnika vositalari;
+- Pul yutugʻiga ega o‘yin avtomatlari;
+- Portativ lazerli nur tarqatgichlar;
+- “M2”, “M3”, “N2” toifasidagi foydalanilgan transport vositalari hamda ayrim “Yevro-2/3” darajasidagi transportlar;
+- Giyohvandlik vositalari.
+
+Olib kirilishi cheklangan tovarlar:
+- Xavfli yuklar;
+- Qurol-yarogʻ, harbiy texnika va harbiy mol-mulk;
+- Fuqaroviy va xizmat quroli, o‘q-dorilar;
+- Uchuvchisiz uchish qurilmalari;
+- Giyohvandlik vositalari, psixotrop moddalar;
+- Dori vositalari (tegishli ruxsatnomalar bilan).
+
+Olib chiqilishi cheklangan tovarlar:
+- Chorva mollari, parranda, goʻsht va goʻsht mahsulotlari;
+- Don mahsulotlari, un va yorma;
+- Charm, moʻyna, ipak, metall chiqindilari kabi xom ashyolar;
+- Madaniy qadriyatlar, badiiy va tarixiy buyumlar;
+- Xavfli yuklar, qurol-yarogʻ, harbiy texnika, giyohvandlik vositalari, psixotrop moddalar, dori vositalari.
+
+Olib chiqilishi taqiqlangan tovarlar misollari:
+- Ellik yil va undan ko‘proq vaqt oldin yaratilgan madaniy boyliklar;
+- Giyohvandlik vositalari.
+
+Javobgarlik (Jinoyat kodeksi):
+- 130-modda — pornografik mahsulotни tayyorlash, olib kirish, tarqatish, reklama qilish, namoyish etish;
+- 130^1-modда — zoʻravonlik ёки shafqatsizlikни targʻib qiluvchi mahsulot;
+- 182-modда — bojxona toʻgʻrisidagi qonunchilikни buzish;
+- 184-modда — soliqlar ёки yigʻimларни toʻlashдан bo‘yin tovlash;
+- 244^3-modда — diniy mazmundagi materiallarni qonunga xilof tayyorlash, saqlash, olib kirish ёки tarqatish;
+- 244^4-modда — uchuvchisiz uchadigan apparатlarni qonunga xilof olib kirish ва ulardan foydalanish;
+- 246-modда — kontrabanda;
+- 250^1-modда — pirotexnika buyumlarининг qonunga xilof muomalasi.
+
+Maʼmuriy javobgarlik:
+- 90^1-modда — ov ва baliq ovlashнинг taqiqlangan vositalari;
+- 185^1-modда — pirotexnika buyumlarининг qonunga xilof muomalаси;
+- 189-modда — pornografik mahsulotлар;
+- 189^1-modда — zoʻravonлик ёки shafqatsizlikни targʻib qiluvchi mahsulotлар;
+- 227-modда — bojxona nazorati zonasi rejимининг бузилиши;
+- 227^1-модда ва бошқалар — bojxona qonunchiligi билан боғлиқ бузилишлар.
+
+Maishiy texnika miqdorий normalari:
+- Sovutgich / Muzlatgich — 1 dona, 6 oyda 1 marta;
+- Konditsioner — 1 dona, 6 oyda 1 marta;
+- Chang yutgich — 1 dona, 6 oyда 1 marta;
+- Gaz plitasi / Elektr plita — 1 dona, 6 oyда 1 marta;
+- Televizor, mikroto‘lqinli pech, duxovkali pech — har biridan 1 dona, 6 oyда 1 marta;
+- Dazmol, fen, oshxona kombayni — 1 dona, 6 oyда 1 marta;
+- Telefon — 2 dona, har safar kelishda bojsiz (deklaratsiya sharti bilan);
+- Planshet / Noutbuk — odatda 1 dona, 6 oyда 1 marta (shaxsiy ehtiyoj);
+- Oshxona idishlari — ruxsat etilgan to‘plam hajmida, 6 oyда 1 marta;
+- Boshqa tovarlar — har bir nomdan 2 kg гача, 1 oyда, umumiy 10 kg гача.
+
+Haydovchilar uchun eslatma:
+- Qishloq xo‘jaligi mahsulotlari eksportга olib chiqilganda:
+  • bojxona postidan ustuvor tartibda oʻtkaziladi;
+  • ko‘pincha navbatsiz yoki alohida yoʻlak orqali rasmiylashtiriladi.
+- Asos: Bojxona kodeksining 251-моддаси ва VMнинг 18.11.2019-йилдаги 912-сон қарори.
+
+Umumiy tavsiyalar:
+- Begona shaxslar nomiga rasmiylashtirilgan bagajni qabul qilmaslik;
+- Bagaj yorlig‘ini sinchiklab tekshirish;
+- Bojsiz meʼyorni hisoblashда zargarlik buyumlari qiymatini ham inobatga olish;
+- Maishiy texnika cheklarини saqlash;
+- Bojxona nazoratiдан o‘tayotганда bagaj ва qo‘l yuki to‘лиғини текшириш.
+
+    Жисмоний шахслар томонидан республикага божсиз олиб кириладиган айрим товарларнинг миқдорий нормалари:
+    Ўзбекистон Республикаси ТИФ ТН 2203-2208 товар позициясида таснифланувчи алкоголь маҳсулоти, шу жумладан, пиво, ароқ - 2 литр ва ундан ортигига рухсат берилмайди.
+    алкоголь маҳсулоти сигара - 5 дона е  ундан ортигига рухсат берилмайди.
+    атир ва ифор тарқатувчи сувлар - 3 дона (300 мл.дан ошмаган миқдорда) ортиғига 30% миқдорда божхона божи тўлаанади. 
+    Rahmat: - мархмат нима ердам керак бўлса таерман.
+`;
+
+    const aiQuestionInput = document.getElementById('aiQuestion');
+    const aiAnswerBox = document.getElementById('aiAnswer');
+    const askBtn = document.getElementById('askBtn');
+    const micBtn = document.getElementById('micBtn');
+
+    async function askAi() {
+      const question = aiQuestionInput.value.trim();
+      if (!question) return;
+
+      if (!OPENAI_API_KEY || OPENAI_API_KEY === "PUT_YOUR_API_KEY_HERE") {
+        aiAnswerBox.innerHTML = "⚠️ Avval OpenAI API kalitingizni xavfsiz tarzda backend'ga joylashtiring.";
+        return;
+      }
+
+      aiAnswerBox.textContent = "⏳ Javob tayyorlanmoqda...";
+
+      try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+           
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content: `
+Sen "AI Bojxona yordamchi"sан.
+
+SENING VAZIFANG:
+1) Avval pastdagi "Bojxona qoidalari" matnidan javob topishga harakat qil.
+2) Agar savolga yetarli javob shu matnda bo'lsa:
+   - javobni aynan shu qoidalarga tayangan holda yoz;
+   - javob ichida qisqa eslat: "Bu javob 01.05.2025-yil broshyura ma'lumotiga asoslangan".
+3) Agar matnda yetarli aniq ma'lumot bo'lmasa yoki savol umuman boshqa mavzu (masalan, boshqa davlat qonuni, turizm, valyutadan tashqari moliya va hokazo) haqida bo'lsa:
+   - unda sen umumiy ChatGPT bilimlaringdan foydalanishing mumkin;
+   - lekin javob oxirida albatta shunday yoz:
+     "Bu qism umumiy ma'lumot bo'lib, rasmiy bojxona organlari bilan tasdiqlab oling."
+4) Agar savol juda tushunarsiz bo'lsa (qisqa, mavzusi noaniq):
+   - avval juda qisqa aniqlashtiruvchi savol ber, masalan:
+     "Valyuta, maishiy texnika, oziq-ovqat yoki boshqa qaysi bo'lim bo'yicha so'rayapsiz?"
+   - keyin aniqlashgandan so'ng javob ber.
+5) Hech qachon o'zingcha yangi raqamlar (USD, kg, kun, oy) uydirma qilib qo'shma. Faqat:
+   - broshyura matnidagi,
+   - yoki umumiy bilimlaringda ishonching yuqori bo'lgan raqamlarni ishlat.
+6) Javoblar o'zbek tilida, sodda, aniq va foydalanuvchi uchun amaliy bo'lsin.
+                `.trim()
+              },
+              {
+                role: "system",
+                content: "Bojxona qoidalari (01.05.2025 holati bo'yicha broshyura matni):\n\n" + BOJXONA_QOIDALARI
+              },
+              {
+                role: "user",
+                content: question
+              }
+            ],
+            temperature: 0.15
+          })
+        });
+
+        const data = await response.json();
+        const text = data?.choices?.[0]?.message?.content || "Javobni olishda xatolik yuz berdi.";
+        aiAnswerBox.textContent = text;
+      } catch (error) {
+        console.error(error);
+        aiAnswerBox.textContent = "❌ Xatolik yuz berdi. Internet yoki API kalitni tekshiring.";
+      }
+    }
+
+    askBtn.addEventListener('click', askAi);
+    aiQuestionInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        askAi();
+      }
+    });
+
+    // 🎙️ Ovozli kiritish
+    let recognition;
+    let isListening = false;
+
+    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'uz-UZ';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        aiQuestionInput.value = transcript;
+        aiAnswerBox.innerHTML = "⏳ Javob tayyorlanmoqda...";
+        askAi();
+      };
+
+      recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove('active');
+        micBtn.innerHTML = '<i class="bi bi-mic-fill"></i>';
+      };
+    } else {
+      micBtn.addEventListener('click', () => {
+        alert("Brauzeringiz mikrofondan foydalanishni qo'llab-quvvatlamaydi.");
+      });
+    }
+
+    if (micBtn && recognition) {
+      micBtn.addEventListener('click', () => {
+        if (!isListening) {
+          isListening = true;
+          micBtn.classList.add('active');
+          micBtn.innerHTML = '<i class="bi bi-record-fill"></i>';
+          recognition.start();
+        } else {
+          recognition.stop();
+        }
+      });
+    }
+  </script>
+</body>
+</html>
